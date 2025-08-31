@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Electronics</h1>
+<a href="{% url 'electronic_create' %}">Add Electronic</a>
+<ul>
+  {% for electronic in electronics %}
+    <li>
+      <a href="{% url 'electronic_detail' electronic.id %}">{{ electronic.name }}</a> <br><br>
+      (Owner: <a href="{% url 'owner_detail' electronic.owner.id %}">{{ electronic.owner.name }}</a>)
+    </li>
+  {% empty %}
+    <li>No electronics added</li>
+  {% endfor %}
+</ul>
+{% endblock %}

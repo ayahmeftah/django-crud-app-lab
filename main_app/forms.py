@@ -10,4 +10,4 @@ class OwnerForm(forms.ModelForm):
 class ElectronicForm(forms.ModelForm):
     class Meta:
         model = Electronic
-        fields = ['name', 'type', 'owner']
+        fields = ['name', 'brand', 'owner']

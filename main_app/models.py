@@ -15,7 +15,7 @@ class Owner(models.Model):
     
 class Electronic(models.Model):
     name = models.CharField(max_length=100)
-    type = models.CharField(max_length=50)
+    brand = models.CharField(max_length=50)
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, related_name="electronics")
 
     class Meta:

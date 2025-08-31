@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ electronic.name }}</h1>
+<p>Brand: {{ electronic.device_type }}</p>
+<p>Owner: <a href="{% url 'owner_detail' electronic.owner.id %}">{{ electronic.owner.name }}</a></p>
+
+
+<form method="post" action="{% url 'electronic_delete' electronic.id %}">
+  {% csrf_token %}
+  <button type="submit">Delete Electronic</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ owner.name }}</h1>
+<p>Email: {{ owner.email }}</p>
+
+<h3>Electronics:</h3>
+<ul>
+  {% for electronic in electronics %}
+    <li>
+      <a href="{% url 'electronic_detail' electronic.id %}">{{ electronic.name }}</a>
+    </li>
+  {% empty %}
+    <li>No electronics</li>
+  {% endfor %}
+</ul>
+
+<br><br>
+
+<a href="{% url 'owner_update' owner.pk %}">Edit</a>
+<form action="{% url 'owner_delete' owner.pk %}" method="post" style="display:inline;">
+  {% csrf_token %}
+  <button type="submit">Delete</button>
+</form>
+
+
+{% endblock %}
