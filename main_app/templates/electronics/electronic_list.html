@@ -9,6 +9,7 @@
       <a href="{% url 'electronic_detail' electronic.id %}">{{ electronic.name }}</a> <br><br>
       (Owner: <a href="{% url 'owner_detail' electronic.owner.id %}">{{ electronic.owner.name }}</a>)
     </li>
+    <hr>
   {% empty %}
     <li>No electronics added</li>
   {% endfor %}

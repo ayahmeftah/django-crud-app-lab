@@ -2,10 +2,10 @@
 
 {% block content %}
 <h1>{{ electronic.name }}</h1>
-<p>Brand: {{ electronic.device_type }}</p>
+<p>Brand: {{ electronic.brand }}</p>
 <p>Owner: <a href="{% url 'owner_detail' electronic.owner.id %}">{{ electronic.owner.name }}</a></p>
 
-
+<a href="{% url 'electronic_update' electronic.pk %}">Edit</a>
 <form method="post" action="{% url 'electronic_delete' electronic.id %}">
   {% csrf_token %}
   <button type="submit">Delete Electronic</button>

@@ -2,19 +2,26 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from .models import Owner, Electronic
 from .forms import OwnerForm, ElectronicForm
-from django.shortcuts import render, redirect
+from django.shortcuts import render
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 
+# Home page
 def home(request):
-    return render(request,'home.html')
+    return render(request, 'home.html')
+
 
 # Owners Views
-class OwnerListView(ListView):
+class OwnerListView(LoginRequiredMixin, ListView):
     model = Owner
     template_name = "owners/owner_list.html"
     context_object_name = "owners"
 
+    def get_queryset(self):
+        return Owner.objects.filter(user=self.request.user)
 
-class OwnerDetailView(DetailView):
+class OwnerDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Owner
     template_name = "owners/owner_detail.html"
     context_object_name = "owner"
@@ -24,15 +31,21 @@ class OwnerDetailView(DetailView):
         ctx['electronics'] = Electronic.objects.filter(owner=self.object)
         return ctx
 
+    def test_func(self):
+        owner = self.get_object()
+        return owner.user == self.request.user
 
-class OwnerCreateView(CreateView):
+class OwnerCreateView(LoginRequiredMixin, CreateView):
     model = Owner
     form_class = OwnerForm
     template_name = "owners/owner_form.html"
     success_url = reverse_lazy("owner_list")
 
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super().form_valid(form)
 
-class OwnerUpdateView(UpdateView):
+class OwnerUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Owner
     form_class = OwnerForm
     template_name = "owners/owner_form.html"
@@ -40,31 +53,57 @@ class OwnerUpdateView(UpdateView):
     def get_success_url(self):
         return reverse("owner_detail", kwargs={"pk": self.object.pk})
 
+    def test_func(self):
+        owner = self.get_object()
+        return owner.user == self.request.user
 
-class OwnerDeleteView(DeleteView):
+class OwnerDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Owner
     success_url = reverse_lazy("owner_list")
+
+    def test_func(self):
+        owner = self.get_object()
+        return owner.user == self.request.user
 
 
 
 # Electronics Views
-class ElectronicDetailView(DetailView):
+class ElectronicListView(LoginRequiredMixin, ListView):
+    model = Electronic
+    template_name = "electronics/electronic_list.html"
+    context_object_name = "electronics"
+
+    def get_queryset(self):
+        return Electronic.objects.filter(owner__user=self.request.user)
+
+
+class ElectronicDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Electronic
     template_name = "electronics/electronic_detail.html"
     context_object_name = "electronic"
     pk_url_kwarg = "electronic_id"
 
+    def test_func(self):
+        electronic = self.get_object()
+        return electronic.owner.user == self.request.user
 
-class ElectronicCreateView(CreateView):
+
+class ElectronicCreateView(LoginRequiredMixin, CreateView):
     model = Electronic
     form_class = ElectronicForm
     template_name = "electronics/electronic_form.html"
+    success_url = reverse_lazy("electronic_list")
 
-    def get_success_url(self):
-        return reverse("owner_detail", kwargs={"pk": self.object.owner.pk})
+    def form_valid(self, form):
+        owner = form.cleaned_data.get('owner') or Owner.objects.get(pk=self.kwargs["owner_id"])
+        if owner.user != self.request.user:
+            return self.handle_no_permission()
+        form.instance.owner = owner
+        return super().form_valid(form)
 
 
-class ElectronicUpdateView(UpdateView):
+
+class ElectronicUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Electronic
     form_class = ElectronicForm
     template_name = "electronics/electronic_form.html"
@@ -73,15 +112,22 @@ class ElectronicUpdateView(UpdateView):
     def get_success_url(self):
         return reverse("electronic_detail", kwargs={"electronic_id": self.object.pk})
 
+    def test_func(self):
+        electronic = self.get_object()
+        return electronic.owner.user == self.request.user
 
-class ElectronicDeleteView(DeleteView):
+
+class ElectronicDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Electronic
     pk_url_kwarg = "electronic_id"
+    success_url = reverse_lazy("electronic_list")
 
-    def get_success_url(self):
-        return reverse("owner_detail", kwargs={"pk": self.object.owner.pk})
+    def test_func(self):
+        electronic = self.get_object()
+        return electronic.owner.user == self.request.user
 
-class ElectronicListView(ListView):
-    model = Electronic
-    template_name = "electronics/electronic_list.html"
-    context_object_name = "electronics"
+class SignUpView(CreateView):
+    model = User
+    form_class = UserCreationForm
+    success_url = reverse_lazy("login")
+    template_name = 'registration/sign-up.html'
