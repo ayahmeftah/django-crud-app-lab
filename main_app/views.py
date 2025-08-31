@@ -94,13 +94,17 @@ class ElectronicCreateView(LoginRequiredMixin, CreateView):
     template_name = "electronics/electronic_form.html"
     success_url = reverse_lazy("electronic_list")
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['owner'].queryset = Owner.objects.filter(user=self.request.user)
+        return form
+
     def form_valid(self, form):
-        owner = form.cleaned_data.get('owner') or Owner.objects.get(pk=self.kwargs["owner_id"])
+        owner = form.cleaned_data.get('owner')
         if owner.user != self.request.user:
             return self.handle_no_permission()
         form.instance.owner = owner
         return super().form_valid(form)
-
 
 
 class ElectronicUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -108,6 +112,11 @@ class ElectronicUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = ElectronicForm
     template_name = "electronics/electronic_form.html"
     pk_url_kwarg = "electronic_id"
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['owner'].queryset = Owner.objects.filter(user=self.request.user)
+        return form
 
     def get_success_url(self):
         return reverse("electronic_detail", kwargs={"electronic_id": self.object.pk})
